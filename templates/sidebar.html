@@ -1,0 +1,118 @@
+{% load static %}
+<!-- SERVER SIDEBAR -->
+<div class="server-sidebar">
+  <a href="{% url 'chat:index' %}" class="server-icon active" title="Pseudo Discord">NC</a>
+  <div class="server-divider"></div>
+  {% if user.is_admin or user.is_moderator %}
+  <a href="{% url 'chat:reports' %}" class="server-icon" title="Zgłoszenia" style="background:#ed4245;font-size:20px;">🚩</a>
+  {% endif %}
+  {% if user.is_admin %}
+  <a href="{% url 'accounts:admin_users' %}" class="server-icon" title="Zarządzaj użytkownikami" style="background:#f57731;font-size:20px;">⚙️</a>
+  {% endif %}
+</div>
+
+<!-- CHANNEL SIDEBAR -->
+<div class="channel-sidebar" id="channel-sidebar">
+  <div class="channel-sidebar-header">
+    <span>Pseudo Discord</span>
+  </div>
+
+  <!-- Search -->
+  <div class="search-bar" style="position:relative;">
+    <input type="text" class="search-input" placeholder="Szukaj użytkownika..." oninput="searchUsers(this.value)" id="user-search-input">
+    <div id="search-results" style="position:absolute;left:10px;right:10px;top:44px;background:var(--bg-tertiary);border:1px solid var(--border);border-radius:8px;z-index:200;display:none;max-height:200px;overflow-y:auto;"></div>
+  </div>
+
+  <div class="channel-list" id="channels-list-container">
+    <!-- TEXT CHANNELS -->
+    <div class="channel-category">
+      <div class="channel-category-header">
+        <span>▾ Kanały tekstowe</span>
+        {% if user.is_admin or user.is_moderator %}
+        <button class="add-btn" onclick="openCreateChannelModal()" title="Dodaj kanał">＋</button>
+        {% endif %}
+      </div>
+      <div id="channels-list">
+        {% for ch in channels %}
+          {% if ch.channel_type == 'text' %}
+          <a href="{% url 'chat:channel' ch.id %}" class="channel-item {% if active_channel.id == ch.id %}active{% endif %}">
+            <i class="channel-icon">#</i>
+            <span>{{ ch.name }}</span>
+            {% if user.is_admin %}
+            <div class="channel-actions">
+              <button class="channel-action-btn" onclick="event.preventDefault();deleteChannel({{ ch.id }})" title="Usuń">✕</button>
+            </div>
+            {% endif %}
+          </a>
+          {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- VOICE CHANNELS -->
+    <div class="channel-category">
+      <div class="channel-category-header">
+        <span>▾ Kanały głosowe</span>
+      </div>
+      {% for ch in channels %}
+        {% if ch.channel_type == 'voice' %}
+        <div class="channel-item">
+          <i class="channel-icon">🔊</i>
+          <span>{{ ch.name }}</span>
+        </div>
+        {% endif %}
+      {% endfor %}
+    </div>
+
+    <!-- DIRECT MESSAGES -->
+    {% if dm_list %}
+    <div class="channel-category">
+      <div class="dm-list-header">Wiadomości prywatne</div>
+      {% for dm_entry in dm_list %}
+      <a href="{% url 'chat:dm' dm_entry.user.username %}" class="dm-item {% if active_dm.username == dm_entry.user.username %}active{% endif %}">
+        <div class="member-avatar">
+          {% if dm_entry.user.avatar %}
+            <img src="{{ dm_entry.user.avatar.url }}" alt="{{ dm_entry.user.username }}">
+          {% else %}
+            <div class="mini-placeholder">{{ dm_entry.user.get_initials }}</div>
+          {% endif %}
+          <span class="status-dot status-{{ dm_entry.user.status }}"></span>
+        </div>
+        <span class="member-name">{{ dm_entry.user.username }}</span>
+        {% if dm_entry.unread > 0 %}
+        <span class="dm-unread">{{ dm_entry.unread }}</span>
+        {% endif %}
+      </a>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- USER PANEL -->
+  <div class="user-panel">
+    <div class="user-panel-avatar" onclick="document.getElementById('status-menu').classList.toggle('d-none')">
+      {% if user.avatar %}
+        <img src="{{ user.avatar.url }}" alt="{{ user.username }}">
+      {% else %}
+        <div class="avatar-placeholder">{{ user.get_initials }}</div>
+      {% endif %}
+      <span class="status-dot status-{{ user.status }}"></span>
+    </div>
+    <div class="user-panel-info">
+      <div class="user-panel-name">{{ user.username }}</div>
+      <div class="user-panel-status">{{ user.get_status_display }}</div>
+    </div>
+    <div class="user-panel-actions">
+      <a href="{% url 'accounts:edit_profile' %}" class="panel-btn" title="Ustawienia">⚙️</a>
+      <a href="{% url 'accounts:logout' %}" class="panel-btn" title="Wyloguj">🚪</a>
+    </div>
+  </div>
+
+  <!-- Status dropdown -->
+  <div id="status-menu" class="d-none" style="position:absolute;bottom:60px;left:72px;background:var(--bg-tertiary);border:1px solid var(--border);border-radius:8px;padding:6px;z-index:300;min-width:180px;box-shadow:0 4px 20px rgba(0,0,0,0.4);">
+    <button class="context-menu-item status-option" data-status="online" onclick="setStatus('online')">🟢 Online</button>
+    <button class="context-menu-item status-option" data-status="away" onclick="setStatus('away')">🟡 Nieobecny</button>
+    <button class="context-menu-item status-option" data-status="dnd" onclick="setStatus('dnd')">🔴 Nie przeszkadzać</button>
+    <button class="context-menu-item status-option" data-status="offline" onclick="setStatus('offline')">⚫ Offline</button>
+  </div>
+</div>

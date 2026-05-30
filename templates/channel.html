@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}#{{ channel.name }} – Pseudo Discord{% endblock %}
+
+{% block body %}
+<div class="app-layout" style="position:relative;">
+  {% with active_channel=channel %}
+  {% include "sidebar.html" %}
+  {% endwith %}
+
+  <!-- MAIN CONTENT -->
+  <div class="main-content">
+    <!-- Header -->
+    <div class="chat-header">
+      <button class="mobile-toggle" onclick="toggleSidebar()">☰</button>
+      <i class="chat-header-icon">{% if channel.channel_type == 'text' %}#{% else %}🔊{% endif %}</i>
+      <span class="chat-header-name">{{ channel.name }}</span>
+      {% if channel.description %}
+      <span class="chat-header-desc">{{ channel.description }}</span>
+      {% endif %}
+      <div class="chat-header-actions">
+        <button class="panel-btn" onclick="document.querySelector('.member-sidebar').classList.toggle('d-none')" title="Członkowie">👥</button>
+        {% if user.is_admin %}
+        <button class="panel-btn danger" onclick="deleteChannel({{ channel.id }})" title="Usuń kanał" style="color:var(--red)">🗑️</button>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="messages-wrapper">
+      <!-- Messages -->
+      <div class="messages-area" id="messages-area">
+        <!-- Channel intro -->
+        <div class="no-messages">
+          <div class="channel-intro-icon">{% if channel.channel_type == 'text' %}#{% else %}🔊{% endif %}</div>
+          <h2>Witaj na #{{ channel.name }}!</h2>
+          <p>To jest początek kanału <strong>#{{ channel.name }}</strong>.
+            {% if channel.description %}{{ channel.description }}{% endif %}
+          </p>
+        </div>
+
+        {% for msg in messages %}
+        <div class="message-group" data-message-id="{{ msg.id }}">
+          <div class="message-avatar">
+            {% if msg.author.avatar %}
+              <img src="{{ msg.author.avatar.url }}" alt="{{ msg.author.username }}" class="message-avatar">
+            {% else %}
+              <div class="avatar-placeholder-lg">{{ msg.author.get_initials }}</div>
+            {% endif %}
+          </div>
+          <div class="message-content">
+            <div class="message-header">
+              <span class="message-username" onclick="openUserMenu(event, '{{ msg.author.username }}')">{{ msg.author.username }}</span>
+              {% if msg.author.role != 'user' %}
+              <span class="role-badge role-{{ msg.author.role }}">{{ msg.author.get_role_display }}</span>
+              {% endif %}
+              <span class="message-timestamp">{{ msg.created_at|date:"H:i" }}</span>
+            </div>
+            {% if msg.is_deleted %}
+            <div class="message-text deleted" id="msg-text-{{ msg.id }}">Wiadomość została usunięta</div>
+            {% else %}
+              {% if msg.message_type == 'text' %}
+              <div class="message-text" id="msg-text-{{ msg.id }}">{{ msg.content }}</div>
+              {% elif msg.message_type == 'image' %}
+              <div class="message-text" id="msg-text-{{ msg.id }}">{% if msg.content %}{{ msg.content }}{% endif %}</div>
+              <img src="{{ msg.file.url }}" class="message-image" onclick="openLightbox(this.src)" alt="obraz">
+              {% elif msg.message_type == 'audio' %}
+              <div class="message-audio"><audio controls src="{{ msg.file.url }}"></audio></div>
+              {% endif %}
+
+              <!-- Reactions -->
+              {% with reactions=msg.get_reactions_dict %}
+              <div class="message-reactions" id="reactions-{{ msg.id }}">
+                {% for emoji, users in reactions.items %}
+                <button class="reaction-badge {% if user.username in users %}mine{% endif %}"
+                        data-emoji="{{ emoji }}"
+                        data-users="{{ users|join:',' }}"
+                        data-count="{{ users|length }}"
+                        onclick="window.chatSocket?.sendReaction({{ msg.id }}, '{{ emoji }}')">
+                  {{ emoji }} <span class="reaction-count">{{ users|length }}</span>
+                </button>
+                {% endfor %}
+              </div>
+              {% endwith %}
+            {% endif %}
+          </div>
+
+          <!-- Message actions -->
+          {% if not msg.is_deleted %}
+          <div class="message-actions">
+            <button class="message-action-btn" onclick="openEmojiPicker(this, {{ msg.id }})" title="Reakcja">😊</button>
+            {% if msg.author == user or user.is_moderator %}
+            <button class="message-action-btn danger" onclick="deleteMsg({{ msg.id }})" title="Usuń">🗑️</button>
+            {% endif %}
+          </div>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+
+      {% include "members.html" %}
+    </div>
+
+    <!-- Typing indicator -->
+    <div class="typing-indicator"></div>
+
+    <!-- Message input -->
+    <div class="message-input-area">
+      <div id="upload-preview" class="upload-preview" style="display:none;"></div>
+      <div class="message-input-box">
+        <label for="file-input" class="input-action-btn" title="Załącz plik">📎</label>
+        <input type="file" id="file-input" accept="image/*,audio/*" style="display:none">
+        <textarea id="message-input" placeholder="Wiadomość do #{{ channel.name }}" rows="1"></textarea>
+        <button id="record-btn" class="input-action-btn" title="Nagraj wiadomość głosową">🎙️</button>
+        <button id="send-btn" class="send-btn" title="Wyślij">➤</button>
+      </div>
+      <input type="hidden" id="send-url" value="{% url 'chat:send_message' channel.id %}">
+    </div>
+  </div>
+</div>
+
+<!-- Create Channel Modal -->
+{% if user.is_admin or user.is_moderator %}
+<div id="create-channel-modal" class="modal-overlay" style="display:none;">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-title">Utwórz kanał</div>
+    <div class="modal-subtitle">Skonfiguruj swój nowy kanał</div>
+    <div class="form-group">
+      <label class="form-label">Typ kanału</label>
+      <select id="channel-type" class="form-select">
+        <option value="text">📝 Tekstowy</option>
+        <option value="voice">🔊 Głosowy</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Nazwa kanału</label>
+      <input type="text" id="channel-name" class="form-control" placeholder="nowy-kanał">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Opis (opcjonalnie)</label>
+      <input type="text" id="channel-description" class="form-control" placeholder="O czym jest ten kanał?">
+    </div>
+    <div class="form-group" style="display:flex;align-items:center;gap:10px;">
+      <input type="checkbox" id="channel-public" class="form-check-input" checked>
+      <label for="channel-public" style="font-size:14px;color:var(--text-secondary);">Kanał publiczny</label>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;">
+      <button class="btn btn-secondary" onclick="closeModal('create-channel-modal')">Anuluj</button>
+      <button class="btn btn-primary" onclick="createChannel()">Utwórz kanał</button>
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+window.currentUser = "{{ user.username }}";
+window.isModerator = {{ user.is_moderator|yesno:"true,false" }};
+window.isAdmin = {{ user.is_admin|yesno:"true,false" }};
+
+const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+const wsUrl = `${wsProtocol}//${window.location.host}/ws/chat/{{ channel.id }}/`;
+window.chatSocket = new ChatSocket(wsUrl);
+
+initMessageInput("{% url 'chat:send_message' channel.id %}");
+</script>
+{% endblock %}

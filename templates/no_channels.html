@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Pseudo Discord{% endblock %}
+
+{% block body %}
+<div class="app-layout" style="position:relative;">
+  {% include "sidebar.html" %}
+  <div class="main-content">
+    <div class="chat-header">
+      <button class="mobile-toggle" onclick="toggleSidebar()">☰</button>
+      <span class="chat-header-name">Pseudo Discord</span>
+    </div>
+    <div class="welcome-screen">
+      <div class="welcome-icon">💬</div>
+      <div class="welcome-title">Witaj w Pseudo Discord!</div>
+      <p class="text-muted" style="margin-bottom:24px;">Wybierz kanał z listy po lewej lub zacznij prywatną rozmowę.</p>
+      {% if user.is_admin or user.is_moderator %}
+      <button class="btn btn-primary" onclick="openCreateChannelModal()">＋ Utwórz pierwszy kanał</button>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- Create Channel Modal -->
+{% if user.is_admin or user.is_moderator %}
+<div id="create-channel-modal" class="modal-overlay" style="display:none;">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-title">Utwórz kanał</div>
+    <div class="modal-subtitle">Skonfiguruj swój nowy kanał</div>
+    <div class="form-group">
+      <label class="form-label">Typ</label>
+      <select id="channel-type" class="form-select">
+        <option value="text">📝 Tekstowy</option>
+        <option value="voice">🔊 Głosowy</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Nazwa</label>
+      <input type="text" id="channel-name" class="form-control" placeholder="nowy-kanał">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Opis</label>
+      <input type="text" id="channel-description" class="form-control" placeholder="Opcjonalny opis">
+    </div>
+    <div class="form-group" style="display:flex;align-items:center;gap:10px;">
+      <input type="checkbox" id="channel-public" checked>
+      <label for="channel-public" style="color:var(--text-secondary);">Publiczny</label>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;">
+      <button class="btn btn-secondary" onclick="closeModal('create-channel-modal')">Anuluj</button>
+      <button class="btn btn-primary" onclick="createChannel()">Utwórz</button>
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+window.currentUser = "{{ user.username }}";
+window.isModerator = {{ user.is_moderator|yesno:"true,false" }};
+</script>
+{% endblock %}

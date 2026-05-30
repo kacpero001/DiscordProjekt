@@ -1,0 +1,26 @@
+<!-- MEMBER SIDEBAR -->
+<div class="member-sidebar">
+  <div class="member-category">
+    <div class="member-category-label">Online — {{ online_users.count }}</div>
+    {% for member in online_users %}
+    <a href="{% url 'chat:dm' member.username %}" class="member-item" data-username="{{ member.username }}">
+      <div class="member-avatar">
+        {% if member.avatar %}
+          <img src="{{ member.avatar.url }}" alt="{{ member.username }}">
+        {% else %}
+          <div class="mini-placeholder">{{ member.get_initials }}</div>
+        {% endif %}
+        <span class="status-dot status-{{ member.status }}"></span>
+      </div>
+      <div>
+        <div class="member-name">{{ member.username }}</div>
+        {% if member.role != 'user' %}
+        <span class="role-badge role-{{ member.role }}">{{ member.get_role_display }}</span>
+        {% endif %}
+      </div>
+    </a>
+    {% empty %}
+    <div class="text-muted" style="padding:8px;font-size:13px;">Brak aktywnych użytkowników</div>
+    {% endfor %}
+  </div>
+</div>

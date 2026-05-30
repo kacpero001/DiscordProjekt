@@ -1,0 +1,76 @@
+{% load static widget_tweaks %}<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rejestracja – Pseudo Discord</title>
+  <link rel="stylesheet" href="{% static 'css/auth.css' %}">
+</head>
+<body>
+<div class="auth-card">
+  <div class="auth-logo">
+    <div class="auth-logo-icon">💬</div>
+    <div class="auth-logo-text">Pseudo Discord</div>
+  </div>
+  <h1 class="auth-title">Utwórz konto</h1>
+  <p class="auth-subtitle">Dołącz do społeczności Pseudo Discord już teraz.</p>
+
+  {% if messages %}
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+    {% endfor %}
+  {% endif %}
+
+  <form method="post" novalidate>
+    {% csrf_token %}
+    <div class="form-group">
+      <label class="form-label">Nazwa użytkownika</label>
+      {% render_field form.username class+="form-control" placeholder="Wybierz nazwę użytkownika" %}
+      {% if form.username.errors %}
+      <div class="invalid-feedback">{{ form.username.errors.0 }}</div>
+      {% endif %}
+      <p class="form-hint">Min. 3 znaki, tylko litery, cyfry i _ @ + . -</p>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Adres email</label>
+      {% render_field form.email class+="form-control" placeholder="twoj@email.com" %}
+      {% if form.email.errors %}
+      <div class="invalid-feedback">{{ form.email.errors.0 }}</div>
+      {% endif %}
+    </div>
+    <div class="form-group">
+      <label class="form-label">Hasło</label>
+      <div class="password-toggle">
+        {% render_field form.password1 class+="form-control" placeholder="Silne hasło" id="pass1" %}
+        <button type="button" class="toggle-btn" onclick="togglePass('pass1')">👁️</button>
+      </div>
+      {% if form.password1.errors %}
+      <div class="invalid-feedback">{{ form.password1.errors.0 }}</div>
+      {% endif %}
+    </div>
+    <div class="form-group">
+      <label class="form-label">Potwierdź hasło</label>
+      <div class="password-toggle">
+        {% render_field form.password2 class+="form-control" placeholder="Powtórz hasło" id="pass2" %}
+        <button type="button" class="toggle-btn" onclick="togglePass('pass2')">👁️</button>
+      </div>
+      {% if form.password2.errors %}
+      <div class="invalid-feedback">{{ form.password2.errors.0 }}</div>
+      {% endif %}
+    </div>
+    <button type="submit" class="btn-auth">Zarejestruj się</button>
+  </form>
+
+  <div class="auth-switch">
+    Masz już konto? <a href="{% url 'accounts:login' %}">Zaloguj się</a>
+  </div>
+</div>
+
+<script>
+function togglePass(id) {
+  const f = document.getElementById(id);
+  f.type = f.type === 'password' ? 'text' : 'password';
+}
+</script>
+</body>
+</html>
