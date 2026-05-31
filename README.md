@@ -1,4 +1,4 @@
-# Nexus Chat – Django Discord-like Application
+# Pseudo discord – Django Discord-like Application
 
 Kompletna aplikacja komunikacyjna inspirowana platformą Discord, zbudowana z Django, WebSockets i Channels.
 
