@@ -60,7 +60,7 @@ def profile_view(request, username=None):
         profile_user = get_object_or_404(User, username=username)
     else:
         profile_user = request.user
-    return render(request, 'registration/profile.html', {'profile_user': profile_user})
+    return render(request, 'profile.html', {'profile_user': profile_user})
 
 
 @login_required
@@ -73,7 +73,7 @@ def edit_profile_view(request):
             return redirect('accounts:profile')
     else:
         form = ProfileEditForm(instance=request.user)
-    return render(request, 'registration/edit_profile.html', {'form': form})
+    return render(request, 'edit_profile.html', {'form': form})
 
 
 @login_required
@@ -82,7 +82,7 @@ def admin_users_view(request):
         messages.error(request, 'Brak uprawnień.')
         return redirect('chat:index')
     users = User.objects.all().order_by('-date_joined')
-    return render(request, 'registration/admin_users.html', {'users': users})
+    return render(request, 'admin_users.html', {'users': users})
 
 
 @login_required
@@ -99,7 +99,7 @@ def admin_edit_user_view(request, user_id):
             return redirect('accounts:admin_users')
     else:
         form = AdminUserEditForm(instance=target_user)
-    return render(request, 'registration/admin_edit_user.html', {'form': form, 'target_user': target_user})
+    return render(request, 'admin_edit_user.html', {'form': form, 'target_user': target_user})
 
 
 @login_required
