@@ -1,0 +1,57 @@
+{% load static %}<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Błąd serwera – Nexus Chat</title>
+  <link rel="stylesheet" href="{% static 'css/app.css' %}">
+  <style>
+    body { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+    .error-container {
+      text-align: center;
+      padding: 40px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      max-width: 500px;
+    }
+    .error-code {
+      font-size: 96px;
+      font-weight: 800;
+      color: var(--red);
+      margin: 0;
+      line-height: 1;
+    }
+    .error-title {
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--text-primary);
+      margin: 12px 0;
+    }
+    .error-message {
+      color: var(--text-muted);
+      margin-bottom: 30px;
+      font-size: 14px;
+    }
+    .error-btn {
+      display: inline-block;
+      padding: 12px 24px;
+      background: var(--accent);
+      color: white;
+      text-decoration: none;
+      border-radius: 6px;
+      font-weight: 600;
+      transition: background 0.2s;
+    }
+    .error-btn:hover { background: var(--accent-hover); }
+  </style>
+</head>
+<body>
+<div class="error-container">
+  <h1 class="error-code">500</h1>
+  <h2 class="error-title">Błąd serwera</h2>
+  <p class="error-message">Coś poszło nie tak. Nasz zespół zostal powiadomiony i pracuje nad naprawą błędu.</p>
+  <a href="{% url 'chat:index' %}" class="error-btn">← Powrót do chatu</a>
+</div>
+</body>
+</html>
