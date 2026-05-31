@@ -1,7 +1,7 @@
 {% load static %}
 <!-- SERVER SIDEBAR -->
 <div class="server-sidebar">
-  <a href="{% url 'chat:index' %}" class="server-icon active" title="Pseudo Discord">PD</a>
+  <a href="{% url 'chat:index' %}" class="server-icon active" title="Nexus Chat">NC</a>
   <div class="server-divider"></div>
   {% if user.is_admin or user.is_moderator %}
   <a href="{% url 'chat:reports' %}" class="server-icon" title="Zgłoszenia" style="background:#ed4245;font-size:20px;">🚩</a>
@@ -14,7 +14,7 @@
 <!-- CHANNEL SIDEBAR -->
 <div class="channel-sidebar" id="channel-sidebar">
   <div class="channel-sidebar-header">
-    <span>Pseudo Discord</span>
+    <span>Nexus Chat</span>
   </div>
 
   <!-- Search -->
@@ -103,7 +103,7 @@
       <div class="user-panel-status">{{ user.get_status_display }}</div>
     </div>
     <div class="user-panel-actions">
-      <a href="{% url 'accounts:edit_profile' %}" class="panel-btn" title="Ustawienia">⚙️</a>
+      <a href="{% url 'accounts:edit_profile' %}" class="panel-btn" title="Edytuj profil">⚙️</a>
       <a href="{% url 'accounts:logout' %}" class="panel-btn" title="Wyloguj">🚪</a>
     </div>
   </div>
