@@ -1,7 +1,7 @@
 {% load static %}
 <!-- SERVER SIDEBAR -->
 <div class="server-sidebar">
-  <a href="{% url 'chat:index' %}" class="server-icon active" title="Nexus Chat">NC</a>
+  <a href="{% url 'chat:index' %}" class="server-icon active" title="Pseudo discord">NC</a>
   <div class="server-divider"></div>
   {% if user.is_admin or user.is_moderator %}
   <a href="{% url 'chat:reports' %}" class="server-icon" title="Zgłoszenia" style="background:#ed4245;font-size:20px;">🚩</a>
