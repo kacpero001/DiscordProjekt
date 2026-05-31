@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+{% load static widget_tweaks %}
+
+{% block title %}Edytuj profil – Nexus Chat{% endblock %}
+
+{% block extra_css %}
+<style>
+  .profile-container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 40px 20px;
+  }
+  .profile-card {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 30px;
+  }
+  .profile-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+    margin-bottom: 30px;
+  }
+  .profile-avatar-wrapper {
+    position: relative;
+  }
+  .profile-avatar {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid var(--accent);
+  }
+  .profile-avatar-placeholder {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
+    font-weight: 700;
+    color: white;
+    border: 3px solid var(--accent);
+  }
+  .avatar-upload-label {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 36px;
+    height: 36px;
+    background: var(--accent);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 18px;
+    transition: background 0.2s;
+  }
+  .avatar-upload-label:hover { background: var(--accent-hover); }
+  .avatar-upload-label input { display: none; }
+  .profile-info h1 {
+    font-size: 24px;
+    font-weight: 800;
+    margin-bottom: 4px;
+  }
+  .profile-info p {
+    color: var(--text-muted);
+    font-size: 14px;
+  }
+  .form-group { margin-bottom: 20px; }
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  @media (max-width: 600px) {
+    .form-row { grid-template-columns: 1fr; }
+    .profile-container { padding: 20px 10px; }
+    .profile-card { padding: 20px; }
+  }
+</style>
+{% endblock %}
+
+{% block body %}
+<div style="background:var(--bg-primary);min-height:100vh;display:flex;flex-direction:column;">
+  <!-- Simple header -->
+  <div style="background:var(--bg-secondary);border-bottom:1px solid var(--border);padding:16px;display:flex;align-items:center;justify-content:space-between;">
+    <a href="{% url 'chat:index' %}" style="color:var(--text-primary);text-decoration:none;font-weight:700;font-size:16px;">← Powrót do chatu</a>
+    <h1 style="font-size:18px;margin:0;">Edytuj profil</h1>
+    <div style="width:100px;"></div>
+  </div>
+
+  <div class="profile-container">
+    <div class="profile-card">
+      <div class="profile-header">
+        <div class="profile-avatar-wrapper">
+          {% if user.avatar %}
+            <img src="{{ user.avatar.url }}" alt="{{ user.username }}" class="profile-avatar">
+          {% else %}
+            <div class="profile-avatar-placeholder">{{ user.get_initials }}</div>
+          {% endif %}
+          <label class="avatar-upload-label" title="Zmień avatar">
+            📷
+            <input type="file" id="avatar-file" accept="image/*">
+          </label>
+        </div>
+        <div class="profile-info">
+          <h1>{{ user.username }}</h1>
+          <p>{{ user.get_role_display }}</p>
+          <p>Dołączył {{ user.date_joined|date:"d.m.Y" }}</p>
+        </div>
+      </div>
+
+      <hr style="border:none;border-top:1px solid var(--border);margin:24px 0;">
+
+      <form method="post" enctype="multipart/form-data" novalidate>
+        {% csrf_token %}
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="{{ form.first_name.id_for_label }}">Imię</label>
+            {% render_field form.first_name class+="form-control" %}
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="{{ form.last_name.id_for_label }}">Nazwisko</label>
+            {% render_field form.last_name class+="form-control" %}
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="{{ form.email.id_for_label }}">Email</label>
+          {% render_field form.email class+="form-control" %}
+          {% if form.email.errors %}
+          <div class="text-red" style="font-size:12px;margin-top:4px;">{{ form.email.errors.0 }}</div>
+          {% endif %}
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="{{ form.bio.id_for_label }}">O sobie</label>
+          {% render_field form.bio class+="form-control" rows="3" %}
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="{{ form.status.id_for_label }}">Status</label>
+          {% render_field form.status class+="form-select" %}
+        </div>
+
+        <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:30px;">
+          <a href="{% url 'chat:index' %}" class="btn btn-secondary">Anuluj</a>
+          <button type="submit" class="btn btn-primary">💾 Zapisz zmiany</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+document.getElementById('avatar-file')?.addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+      const preview = document.querySelector('.profile-avatar, .profile-avatar-placeholder');
+      if (preview.tagName === 'IMG') {
+        preview.src = ev.target.result;
+      } else {
+        preview.style.backgroundImage = `url(${ev.target.result})`;
+      }
+    };
+    reader.readAsDataURL(file);
+    // Auto-submit form
+    const form = document.querySelector('form');
+    const avatarInput = form.querySelector('input[name="avatar"]');
+    if (avatarInput) {
+      avatarInput.files = e.target.files;
+      form.submit();
+    }
+  }
+});
+</script>
+{% endblock %}
