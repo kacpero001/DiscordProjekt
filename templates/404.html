@@ -1,0 +1,227 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Zgłoszenia – Nexus Chat{% endblock %}
+
+{% block extra_css %}
+<style>
+  .reports-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 40px 20px;
+  }
+  .reports-card {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+  .reports-header {
+    padding: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .reports-header h1 {
+    font-size: 24px;
+    font-weight: 800;
+    margin: 0 0 8px;
+  }
+  .report-item {
+    padding: 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+  }
+  .report-item:last-child { border-bottom: none; }
+  .report-item:hover { background: rgba(255,255,255,0.02); }
+  .report-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .report-avatar-placeholder {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 700;
+    color: white;
+    flex-shrink: 0;
+  }
+  .report-content {
+    flex: 1;
+    min-width: 0;
+  }
+  .report-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+  }
+  .report-user {
+    font-weight: 600;
+    color: var(--accent);
+  }
+  .report-arrow {
+    color: var(--text-muted);
+  }
+  .report-reason {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 10px 12px;
+    margin: 8px 0;
+    color: var(--text-secondary);
+    font-size: 13px;
+    line-height: 1.5;
+  }
+  .report-meta {
+    display: flex;
+    gap: 12px;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  .report-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .status-pending {
+    background: rgba(250,168,26,0.2);
+    color: var(--yellow);
+  }
+  .status-resolved {
+    background: rgba(59,165,93,0.2);
+    color: var(--green);
+  }
+  .report-actions {
+    display: flex;
+    gap: 6px;
+  }
+  .empty-state {
+    padding: 60px 20px;
+    text-align: center;
+    color: var(--text-muted);
+  }
+  .empty-state-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+  }
+  @media (max-width: 600px) {
+    .reports-container { padding: 20px 10px; }
+    .report-item { flex-direction: column; gap: 12px; }
+  }
+</style>
+{% endblock %}
+
+{% block body %}
+<div style="background:var(--bg-primary);min-height:100vh;display:flex;flex-direction:column;">
+  <!-- Header -->
+  <div style="background:var(--bg-secondary);border-bottom:1px solid var(--border);padding:16px;display:flex;align-items:center;justify-content:space-between;">
+    <a href="{% url 'chat:index' %}" style="color:var(--text-primary);text-decoration:none;font-weight:700;font-size:16px;">← Powrót do chatu</a>
+    <h1 style="font-size:18px;margin:0;">🚩 Zgłoszenia użytkowników</h1>
+    <div style="width:200px;"></div>
+  </div>
+
+  <div class="reports-container">
+    <div class="reports-card">
+      <div class="reports-header">
+        <h1>Zgłoszenia</h1>
+        <p style="color:var(--text-muted);margin:0;">
+          Razem: {{ reports.count }} | Oczekujące: {{ reports|dictsort:"status"|length }}
+        </p>
+      </div>
+
+      {% if reports %}
+        {% for report in reports %}
+        <div class="report-item">
+          <a href="{% url 'accounts:profile_detail' report.reported_user.username %}" style="text-decoration:none;display:block;">
+            {% if report.reported_user.avatar %}
+              <img src="{{ report.reported_user.avatar.url }}" alt="{{ report.reported_user.username }}" class="report-avatar">
+            {% else %}
+              <div class="report-avatar-placeholder">{{ report.reported_user.get_initials }}</div>
+            {% endif %}
+          </a>
+
+          <div class="report-content">
+            <div class="report-header">
+              <span class="report-user">{{ report.reported_user.username }}</span>
+              <span class="report-arrow">←</span>
+              <span class="text-muted">Zgłoszony przez</span>
+              <span class="report-user">{{ report.reporter.username }}</span>
+            </div>
+
+            <div class="report-reason">
+              <strong>Powód:</strong><br>
+              {{ report.reason }}
+            </div>
+
+            <div class="report-meta">
+              <span>📅 {{ report.created_at|date:"d.m.Y H:i" }}</span>
+              <span class="report-status" style="margin-left:auto;">
+                {% if report.status == 'pending' %}
+                  ⏳ Oczekuje
+                {% else %}
+                  ✓ Rozwiązane
+                {% endif %}
+              </span>
+            </div>
+
+            <div class="report-actions" style="margin-top:12px;">
+              <a href="{% url 'accounts:profile_detail' report.reported_user.username %}" class="btn btn-sm btn-secondary">👤 Profil</a>
+              <a href="{% url 'accounts:admin_edit_user' report.reported_user.id %}" class="btn btn-sm btn-secondary">⚙️ Edytuj</a>
+              {% if report.status == 'pending' %}
+              <button onclick="resolveReport({{ report.id }})" class="btn btn-sm btn-primary">✓ Oznacz jako rozwiązane</button>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      {% else %}
+        <div class="empty-state">
+          <div class="empty-state-icon">✨</div>
+          <h2>Brak zgłoszeń</h2>
+          <p>Nie ma żadnych zgłoszeń od użytkowników. Czekaj na zgłoszenia od społeczności.</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<script>
+async function resolveReport(reportId) {
+  if (!confirm('Oznaczyć to zgłoszenie jako rozwiązane?')) return;
+  try {
+    const res = await fetch(`/chat/reports/${reportId}/resolve/`, {
+      method: 'POST',
+      headers: { 'X-CSRFToken': getCookie('csrftoken') }
+    });
+    const data = await res.json();
+    if (data.ok) {
+      showToast('Zgłoszenie oznaczone jako rozwiązane', 'success');
+      setTimeout(() => window.location.reload(), 1000);
+    }
+  } catch (e) {
+    showToast('Błąd', 'error');
+  }
+}
+
+function getCookie(name) {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop().split(';').shift();
+}
+</script>
+{% endblock %}
