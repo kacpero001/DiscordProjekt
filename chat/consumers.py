@@ -3,7 +3,6 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
 from django.utils import timezone
 
-
 class ChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         self.channel_id = self.scope['url_route']['kwargs']['channel_id']
@@ -77,6 +76,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             )
 
     async def chat_message(self, event):
+        event.pop('type', None)
         await self.send(text_data=json.dumps({'type': 'message', **event}))
 
     async def user_status(self, event):
@@ -162,28 +162,9 @@ class DMConsumer(AsyncWebsocketConsumer):
                 'timestamp': message['timestamp'],
             }
         )
-    async def chat_message(self, event):
-        await self.send(text_data=json.dumps({
-                'type': 'message',
-                'message_id': event['message_id'],
-                'content': event['content'],
-                'username': event['username'],
-                'avatar': event.get('avatar'),
-                'initials': event['initials'],
-                'timestamp': event['timestamp'],
-                'role': event.get('role'),
-        }))
-    
     async def dm_message(self, event):
-        await self.send(text_data=json.dumps({
-            'type': 'dm',
-            'message_id': event['message_id'],
-            'content': event['content'],
-            'username': event['username'],
-            'avatar': event.get('avatar'),
-            'initials': event['initials'],
-            'timestamp': event['timestamp'],
-        }))
+        event.pop('type', None)
+        await self.send(text_data=json.dumps({'type': 'dm', **event}))
 
     @database_sync_to_async
     def save_dm(self, user, content):
