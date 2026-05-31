@@ -162,9 +162,28 @@ class DMConsumer(AsyncWebsocketConsumer):
                 'timestamp': message['timestamp'],
             }
         )
-
+    async def chat_message(self, event):
+        await self.send(text_data=json.dumps({
+                'type': 'message',
+                'message_id': event['message_id'],
+                'content': event['content'],
+                'username': event['username'],
+                'avatar': event.get('avatar'),
+                'initials': event['initials'],
+                'timestamp': event['timestamp'],
+                'role': event.get('role'),
+        }))
+    
     async def dm_message(self, event):
-        await self.send(text_data=json.dumps({'type': 'dm', **event}))
+        await self.send(text_data=json.dumps({
+            'type': 'dm',
+            'message_id': event['message_id'],
+            'content': event['content'],
+            'username': event['username'],
+            'avatar': event.get('avatar'),
+            'initials': event['initials'],
+            'timestamp': event['timestamp'],
+        }))
 
     @database_sync_to_async
     def save_dm(self, user, content):
