@@ -83,7 +83,7 @@ python manage.py runserver
 daphne -b 0.0.0.0 -p 8000 discordapp.asgi:application
 ```
 
-Aplikacja będzie dostępna na: http://localhost:8000
+Aplikacja będzie dostępna na: [http://localhost:8000](https://discordprojekt.onrender.com)
 
 ## 🌐 Deployment na Render.com
 
